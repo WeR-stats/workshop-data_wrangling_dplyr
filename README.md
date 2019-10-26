@@ -1,1 +1,1 @@
-# Data Wrangling With The *tidyverse*: *dplyr* and *tidyr*
+# Data Wrangling with the *tidyverse*: *dplyr* and *tidyr*
