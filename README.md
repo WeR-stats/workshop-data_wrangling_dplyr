@@ -1,1 +1,1 @@
-# workshop-data_wrangling_dplyr_tidyr
+# Data Wrangling With The *tidyverse*: *dplyr* and *tidyr*
