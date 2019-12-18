@@ -1,0 +1,361 @@
+---
+title: 'Data Wrangling with *dplyr*'
+author: 'Luca Valnegri'
+date: '`r format(Sys.Date(), "%d %B %Y")`'
+output: 
+    rmdformats::readthedown:
+        theme: lumen
+        highlight: tango
+        code_fold: hide
+        css: 'https://datamaps.uk/assets/WeR/nb.css'
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Setting up 
+
+Load the *dplyr* package. Install it if it's not found.
+```{r}
+if(!require(dplyr)) install.packages('dplyr')
+library(dplyr)
+```
+
+Load the dataset *msleep* from the [ggplot2](https://ggplot2.tidyverse.org/) package (install it if it's not found):
+```{r}
+if(!require(ggplot2)) install.packages('ggplot2')
+data(msleep, package = c('ggplot2'))
+str(msleep)
+msleep
+```
+The *msleep* (mammals sleep) dataset contains the sleeptimes and weights for a set of mammals. This dataset contains 83 rows and 11 variables.
+
+Load the dataset *diamond* from the [ggplot2](https://ggplot2.tidyverse.org/) package: 
+```{r}
+data(diamonds, package = c('ggplot2'))
+str(diamonds)
+diamonds
+```
+The *diamonds* dataset contains information about 10 attributes of nearly 54,000 diamonds
+
+
+Load the *Human Development Index (HDI)* dataset from the [UN Development Programme Website](http://hdr.undp.org/en/data) using the [readr](https://readr.tidyverse.org/) package: 
+```{r}
+if(!require(readr)) install.packages('readr')
+hdi <- readr::read_csv('./data/hdi.csv', skip = 1, na = c('', '..'))
+str(hdi)
+hdi
+```
+
+
+Load the *Online Retail* dataset from the [UC Irvine Machine Learning Repository](https://archive.ics.uci.edu/ml/datasets/online+retail) using the [readxl](https://readxl.tidyverse.org/) package: 
+```{r}
+if(!require(readxl)) install.packages('readxl')
+retail <- readxl::read_xlsx('./data/retail.xlsx')
+str(retail)
+retail
+```
+
+
+# Main Verbs
+
+## Select or Drop columns
+
+You can select one or multiple column, using either the name of the column(s) or its (their) position(s). The general form is:
+```
+select(dataframe, column, ...)
+```
+but it's preferable to use the *pipe* operator `%>%` from the [magrittr](https://magrittr.tidyverse.org/) package that can be directly applied to all commands that admit a dataframe a their first argument:
+```
+dataframe %>% select(column, ...)
+```
+
+Let's see some examples:
+```{r}
+diamonds %>% select(carat)
+diamonds %>% select(carat, price)
+```
+
+To select a range of columns, by names or positions, use the `:` (colon) operator:
+```{r}
+diamonds %>% select(carat)
+diamonds %>% select(carat, price)
+```
+
+To drop one or more column(s), aka select all the columns except one or more specific column(s), use the `-` (subtraction) operator (also known as *negative indexing*):
+```{r}
+diamonds %>% select(-carat)
+diamonds %>% select(-c(carat, price))
+```
+
+Be careful when dropping a range of columns, as you need to wrap the sequence in parenthesis:
+```{r}
+diamonds %>% select(-(1:3))
+diamonds %>% select(-(x:z))
+```
+
+
+You can also rename columns *while* selecting:
+```{r}
+hdi %>% select('rank' = 1, Country)
+```
+
+
+The *select* command always return a  dataframe, even if you ask for a single column. In this latter case, if you want *R* to return a vector, you need to use the *pull* command:
+```{r}
+diamonds %>% pull(carat)
+```
+
+### Select Helper Functions
+
+  - `starts_with()` to select columns that *start* with a character string
+```{r}
+hdi %>% select(Country, starts_with('201'))
+```
+
+  - `ends_with()` to select columns that *end* with a character string
+  
+  - `contains()` to select columns that *contain* a character string
+  
+  - `matches()` to select columns that *match* a regular expression
+  
+  - `one_of()` to select columns names that are from a group of names
+  
+  - `everything()` to select *all* columns that have *not* been selected yet. This command is useful when you want to reorder columns: just list the first column(s) you want to have, then end the select command with `everything()`
+```{r}
+hdi %>% select(Country, 'rank' = 1, everything())
+```
+
+
+
+## Rename columns
+
+```
+rename(dataframe, newname = oldname, ...)
+```
+where `oldname` can be either the real name of the variable or its (unquoted) position: 
+
+```{r}
+hdi <- hdi %>% rename('rank' = 1, 'country' = 2)
+hdi
+```
+
+ 
+```{r}
+
+```
+
+## Create new columns
+
+```
+mutate(dataframe, newvarname = formula, ...)
+```
+
+```{r}
+diamonds %>% mutate(Ratio = round(price / carat, 2))
+```
+
+You can add as many columns as you want by separating each new calculation with a comma
+```{r}
+
+```
+
+
+## Filter rows
+
+```
+rename(dataframe, condition, ...)
+```
+You can use all the well known boolean operators (e.g. `>`, `<`, `>=`, `<=`, `!=`, `&`, `|`, `%in%`) to create the desired logical test(s). 
+
+```{r}
+msleep %>% filter(sleep_total >= 16)
+retail %>% 
+    filter(Country %in% c('France', 'Germany', 'Italy')) %>% 
+    distinct(Description)
+```
+
+ 
+When listing multiple conditions, they are evaluating using an implicit *AND* logical operator:
+```{r}
+hdi %>% filter(!is.na(rank), !is.na(country))
+```
+
+ 
+
+Notice that `rename` always return *all* columns, even if not listed, unlike `select` that extract only the listed columns.
+
+### Sampling rows
+
+It's often requested to filter data in a *non-conditional* way, simply extracting a number of them using some kind of random algorithm:
+
+```{r}
+
+```
+
+ 
+```{r}
+
+```
+
+
+
+
+## Reorder rows
+
+ 
+```{r}
+
+```
+
+ 
+```{r}
+
+```
+
+
+## Calculating Statistical summaries
+
+
+ 
+```{r}
+
+```
+
+On top of all the familiar statistics like: `min`, `max`, `sum`, `median`, `mean`, `sd`, and so on, there are a few peculiar to *dplyr*:
+
+  - `n()` returns the length of vector (the number of components)
+  
+  - `n_distinct()` number of distinct values in vector
+  
+  - `first()` returns first value in vector
+  
+  - `last()` returns last value in vector
+
+ 
+```{r}
+
+```
+
+
+## Grouping rows
+The `group_by` verb is related to concept of *split-apply-combine*, where we first *split* the dataframe using one or more of its attribute(s) (categorical variable), *apply* one or more function(s) to each group independently, and then combine the results in a new tabular output. Used in this way, it is  necessarily followed by a `summarise` command.
+
+```{r}
+retail %>% 
+    group_by(Country) %>% 
+    summarise(revenues = sum(Quantity  * UnitPrice))
+```
+
+ 
+```{r}
+msleep %>% 
+    group_by(order) %>%
+    summarise(
+        avg_sleep = mean(sleep_total), 
+        min_sleep = min(sleep_total), 
+        max_sleep = max(sleep_total),
+        total = n()
+    ) %>% 
+    arrange(-avg_sleep)
+```
+
+
+
+# Joins
+
+## Binding dataframes
+
+We can create a single dataframe adding multiple *corresponding* dataframes either by row, building up one on top of each other, using `bind_rows`:
+```{r}
+crime_essex <- read_csv('./data/2019-10-essex-street.csv')
+crime_london <- read_csv('./data/2019-10-metropolitan-street.csv')
+bind_rows(crime_london, crime_essex) %>% 
+    group_by(`Falls within`) %>% 
+    summarize('Total Accidents' = n())
+```
+
+Or by column, using `bind_cols`:
+```{r}
+
+```
+
+
+
+## Mutating Joins
+
+```{r}
+lookups <- read_csv('./data/geo_lookups.csv')
+locations <- read_csv('./data/geo_locations.csv')
+crime_london %>% 
+    left_join(lookups, by = c(`LSOA code` = 'LSOA')) %>% 
+    filter(RGN == 'E12000007') %>% 
+    group_by(LAD) %>% 
+    summarize('Total Accidents' = n()) %>% 
+    left_join(locations %>% select(LAD = location_id, Borough = name), by = 'LAD') %>% 
+    select(3, 2) %>% 
+    arrange(desc(`Total Accidents`))
+```
+
+ 
+```{r}
+
+```
+
+
+## Filtering Joins
+
+```{r}
+
+```
+
+ 
+```{r}
+
+```
+
+
+# Datasets
+
+  - Package Internals:
+    - *iris* and *mtcars* from `base`
+    - *msleep* from `ggplot2`
+    - *diamonds* from `ggplot2`
+    - *gapminder* from `gapminder`
+    - *flights* from `nycflights13`
+    - *storms* from `dplyr`
+
+  - [Ames Housing Dataset](https://ww2.amstat.org/publications/jse/v19n3/decock.pdf)
+
+  - [UCI Online Retail](https://archive.ics.uci.edu/ml/datasets/online+retail)
+
+  - [Human Development Index](http://hdr.undp.org/en/data) by Country
+  
+  - [Corruption Perceptions Index](https://www.transparency.org/research/cpi) by Country
+  
+  - [UK House Price Index](https://www.ons.gov.uk/economy/inflationandpriceindices/bulletins/housepriceindex/previousReleases) 
+  
+  - [UK Gender Paygap](https://gender-pay-gap.service.gov.uk/) by Business Company
+    
+  - [UK Petitions](https://petition.parliament.uk/petitions/) by Constituency
+  
+  - [UK Elections Results](https://researchbriefings.parliament.uk/ResearchBriefing/Summary/CBP-8647) by Constituency
+
+  - [Brexit Referendum Results](https://www.electoralcommission.org.uk/who-we-are-and-what-we-do/elections-and-referendums/past-elections-and-referendums/eu-referendum/results-and-turnout-eu-referendum) by Local Authority
+
+  - [UK Electoral Statistics](https://www.ons.gov.uk/peoplepopulationandcommunity/elections/electoralregistration/datasets/electoralstatisticsforuk) by Constituency
+
+  - [UK Population Mid-Year Estimates](https://www.ons.gov.uk/peoplepopulationandcommunity/populationandmigration/populationestimates/datasets/parliamentaryconstituencymidyearpopulationestimates) by Constituency
+
+  - [UK Food shops Ratings](https://ratings.food.gov.uk/) by Local Authority and Shop
+  
+  - [Airbnb Listings](http://insideairbnb.com/get-the-data.html) by City
+  
+  - [UK Crime Accident](https://data.police.uk/data/) by Lower Layer Super Output Area
+
+  - [London Cycling Scheme](https://cycling.data.tfl.gov.uk/) by Single Trip for every Bike Station
+
+  - [UK Flights Punctuality](https://www.caa.co.uk/Data-and-analysis/UK-aviation-market/Flight-reliability/Datasets/UK-flight-punctuality-data/) by Airport
+
+  - [Geography Locations and Lookups](https://geoportal.statistics.gov.uk/)

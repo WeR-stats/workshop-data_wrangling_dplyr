@@ -1,0 +1,724 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+  <head>
+    <title>💻 R Workshop 💻</title>
+    <meta charset="utf-8" />
+    <meta name="author" content="Luca Valnegri" />
+    <link href="libs/remark-css-0.0.1/default.css" rel="stylesheet" />
+    <link href="libs/remark-css-0.0.1/metropolis.css" rel="stylesheet" />
+    <link href="libs/remark-css-0.0.1/metropolis-fonts.css" rel="stylesheet" />
+    <link href="libs/font-awesome-5.3.1/css/fontawesome-all.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://datamaps.uk/helpers/xaringan/xari.css" type="text/css" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+# 💻 <i>R</i> Workshop 💻
+## Data Wrangling with <i>dplyr</i>
+### Luca Valnegri
+
+---
+
+layout: true
+&lt;div class="wer-header"&gt; &lt;img class="logo" src="https://datamaps.uk/helpers/xaringan/logo_white.png"/&gt; &lt;/div&gt;
+&lt;div class="wer-footer"&gt; &lt;span&gt; &amp;copy;2019 WeR meetup &lt;br&gt; https://github.com/WeR-stats/ &lt;/span&gt; &lt;/div&gt;
+
+
+
+---
+# *R* Recap
+
+  - Data Types 
+
+--
+
+  - Data Structures
+
+--
+
+  - Indexing and Subsetting
+
+--
+
+  - Vectorization
+
+--
+
+  - Recycling
+  
+
+---
+# Why Data Wrangling?
+
+ - Make data structures suitable to use with a particular piece of software / package
+
+--
+
+ - Reveal information otherwise hidden from view
+
+--
+
+ - Also called: Data Munging, Janitor Work, Data Transformation, ...
+
+--
+
+ - However it's called, it can take up to 80% of the analysis time
+
+
+---
+# Why Data Wrangling?
+
+ - Two main *tidyverse* packages: `dplyr` and `tidyr`
+
+--
+
+ - Other packages: `data.table`, `janitor`, ...
+
+--
+
+ - `data.table` is more efficient and compact than `dplyr`, but it's also more difficult to learn
+  
+---
+# Data Wrangling: *tidydata*
+
+ - Data come in many formats
+
+--
+
+ - We usually aim at tabular datasets such that:
+
+--
+
+   1. Each variable is saved in its own column
+
+--
+
+   2. Each observation is saved in its own row
+
+--
+
+   3. Each *coherent* type of observations are stored in a single dataset
+
+--
+  
+ The complying dataset then represent the state of an *entity*
+
+ 
+---
+# *dplyr* Introduction
+
+ - Great for data exploration and transformation
+
+--
+
+ - Intuitive to write and easy to read, especially when using the “chaining” syntax
+
+--
+
+ - Faster than *core R* on data frames
+
+--
+
+ - Work also with data.table and data stored in databases
+
+
+---
+# *dplyr* Introduction
+
+ - Most jobs are done using just the main two *verbs* `select` and `filter`
+
+--
+
+ - Easy *merge* with variations
+
+--
+
+ - Provides also *Window functions* for calculating ranking, offsets, and more
+ 
+
+---
+# *dplyr* Introduction
+
+ - the first argument is a data frame
+
+--
+
+ - the return value is *always* a data frame
+ 
+--
+
+ - nothing is modified in place
+
+--
+ 
+ - no need to repeat the dataframe name
+
+--
+
+ - often no need to quote column names
+
+--
+
+ - in general, *dplyr* does not preserve row names
+ 
+
+---
+# *dplyr* Introduction
+
+In the following we'll use the dataset *flights* from the package `nycflights13` that contains information about all flights that departed in 2013 from the three New York City airports:
+ - `JFK` John F. Kennedy International Airport, primarily handles international flights
+ - `LGA` LaGuardia AirportCentral Parkway), mainly handles domestic flights
+ - `EWR` Newark International Airport (EWR), handles both domestic and international flights
+ 
+---
+# *dplyr* Introduction
+
+The package provides the following data tables
+ - `flights` all flights that departed from NYC in 2013
+ - `airports` airport names and locations
+ - `weather` hourly meterological data for each airport
+ - `planes` construction information about each plane
+ - `airlines` translation between two letter carrier codes and names
+
+---
+# *dplyr* Introduction
+
+The `flights` dataset contains 19 variables
+.font70[
+
+```r
+  tbl_df(flights)
+```
+
+```
+## # A tibble: 336,776 x 19
+##     year month   day dep_time sched_dep_time dep_delay arr_time
+##    &lt;int&gt; &lt;int&gt; &lt;int&gt;    &lt;int&gt;          &lt;int&gt;     &lt;dbl&gt;    &lt;int&gt;
+##  1  2013     1     1      517            515         2      830
+##  2  2013     1     1      533            529         4      850
+##  3  2013     1     1      542            540         2      923
+##  4  2013     1     1      544            545        -1     1004
+##  5  2013     1     1      554            600        -6      812
+##  6  2013     1     1      554            558        -4      740
+##  7  2013     1     1      555            600        -5      913
+##  8  2013     1     1      557            600        -3      709
+##  9  2013     1     1      557            600        -3      838
+## 10  2013     1     1      558            600        -2      753
+## # … with 336,766 more rows, and 12 more variables: sched_arr_time &lt;int&gt;,
+## #   arr_delay &lt;dbl&gt;, carrier &lt;chr&gt;, flight &lt;int&gt;, tailnum &lt;chr&gt;,
+## #   origin &lt;chr&gt;, dest &lt;chr&gt;, air_time &lt;dbl&gt;, distance &lt;dbl&gt;, hour &lt;dbl&gt;,
+## #   minute &lt;dbl&gt;, time_hour &lt;dttm&gt;
+```
+]
+
+---
+# *dplyr* Introduction
+
+.font60[
+
+```r
+  glimpse(flights)
+```
+
+```
+## Observations: 336,776
+## Variables: 19
+## $ year           &lt;int&gt; 2013, 2013, 2013, 2013, 2013, 2013, 2013, 2013, 2…
+## $ month          &lt;int&gt; 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1…
+## $ day            &lt;int&gt; 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1…
+## $ dep_time       &lt;int&gt; 517, 533, 542, 544, 554, 554, 555, 557, 557, 558,…
+## $ sched_dep_time &lt;int&gt; 515, 529, 540, 545, 600, 558, 600, 600, 600, 600,…
+## $ dep_delay      &lt;dbl&gt; 2, 4, 2, -1, -6, -4, -5, -3, -3, -2, -2, -2, -2, …
+## $ arr_time       &lt;int&gt; 830, 850, 923, 1004, 812, 740, 913, 709, 838, 753…
+## $ sched_arr_time &lt;int&gt; 819, 830, 850, 1022, 837, 728, 854, 723, 846, 745…
+## $ arr_delay      &lt;dbl&gt; 11, 20, 33, -18, -25, 12, 19, -14, -8, 8, -2, -3,…
+## $ carrier        &lt;chr&gt; "UA", "UA", "AA", "B6", "DL", "UA", "B6", "EV", "…
+## $ flight         &lt;int&gt; 1545, 1714, 1141, 725, 461, 1696, 507, 5708, 79, …
+## $ tailnum        &lt;chr&gt; "N14228", "N24211", "N619AA", "N804JB", "N668DN",…
+## $ origin         &lt;chr&gt; "EWR", "LGA", "JFK", "JFK", "LGA", "EWR", "EWR", …
+## $ dest           &lt;chr&gt; "IAH", "IAH", "MIA", "BQN", "ATL", "ORD", "FLL", …
+## $ air_time       &lt;dbl&gt; 227, 227, 160, 183, 116, 150, 158, 53, 140, 138, …
+## $ distance       &lt;dbl&gt; 1400, 1416, 1089, 1576, 762, 719, 1065, 229, 944,…
+## $ hour           &lt;dbl&gt; 5, 5, 5, 5, 6, 5, 6, 6, 6, 6, 6, 6, 6, 6, 6, 5, 6…
+## $ minute         &lt;dbl&gt; 15, 29, 40, 45, 0, 58, 0, 0, 0, 0, 0, 0, 0, 0, 0,…
+## $ time_hour      &lt;dttm&gt; 2013-01-01 05:00:00, 2013-01-01 05:00:00, 2013-0…
+```
+]
+
+
+---
+# *dplyr* Pipe Operator `%&gt;%`
+
+This operator allows you to *pipe* the output from one function to the input of another function. 
+
+Instead of nesting functions as usual (reading from the inside to the outside), the idea of of piping is to read the functions from left to right:
+
+ `x %&gt;% f(y) is equivalent to f(x, y)`
+ 
+ `y %&gt;% f(x, .) is equivalent to f(x, y)`
+ 
+To be able to work in the tidyverse, a function needs to accept a dataset as first argument
+
+---
+# *dplyr* verbs: *select*
+
+To extract certain columns from the data frame
+The order in which you add them, will determine the order in which they appear in the output
+
+
+```r
+# Select columns by name(s)
+flights %&gt;% select(origin, dest, year, dep_delay)
+
+# Select all columns between two columns, by names or positions
+flights %&gt;% select(year:dep_delay)
+flights %&gt;% select(c(1:3, 7:9))
+
+# To drop columns include a minus sign in front of the selection
+flights %&gt;% select(-tailnum)
+flights %&gt;% select(-(year:dep_delay))
+```
+
+---
+# *dplyr* verbs: *select* helpers
+
+Select all columns whose names:
+
+ - `starts_with()` *start* with the specified prefix
+ - `ends_with()` *end* with the specified suffix
+ - `contains()` *contain* the specified string
+ - `matches()` match a *regular expression*
+
+Insert `ignore.case = TRUE` in any of the above to differentiate between upper and lower case
+
+
+---
+# *dplyr* verbs: *select* helpers
+
+ - `num_range()` select all columns whose names match a numerical pattern range, starting with the `prefix` character(s)
+ - `one_of()` select columns whose names are in the specified vector of names
+ - `!!` same as `one_of`
+ - `everything()` select every column (mostly used to reorder some columns while keeping all the columns)
+ - `last_col()` select last column, set `offset` to `n` to select the *n*th columns from the end
+ - `group_cols()` select all columns that act as *grouping* variables (see below)
+
+---
+# *dplyr* verbs: *pull*
+
+When you need a vector as a result intead of a dataframe of one single column
+
+Compare
+   
+   `flights %&gt;% pull(tailnum)`
+
+with
+
+   `flights %&gt;% select(tailnum)`
+
+---
+# *dplyr* verbs: *rename*
+
+ - rename 'tailnum' with 'tail_num'
+ 
+   `flights %&gt;% rename(tail_num = tailnum)`
+
+--
+
+ - It is also possible to renaming variables while selecting, but you lose all unspecified variables. 
+   Instead, `rename()` keeps all the variables.
+
+--
+
+ - On the other hand, `select()` can rename variables in a group using a numeric pattern:
+
+  `flights %&gt;% select(dep = contains('dep'))`
+
+
+---
+# *dplyr* verbs: *filter*
+
+To extract a subset of rows based on one or more condition
+
+
+```r
+flights %&gt;% filter( dep_delay &gt; 10 ) 
+
+flights %&gt;% filter( arr_delay &lt; dep_delay ) 
+
+flights %&gt;% filter( hour &lt; 12, arr_delay &lt;= 0 )
+```
+
+---
+# *dplyr* verbs: *arrange*
+
+Allows to reorder a dataframe based on one or more columns
+
+
+```r
+flights %&gt;% 
+    filter( hour &gt; 10 ) %&gt;% 
+    arrange(year, month, day)
+
+flights %&gt;% 
+    filter( origin == 'JFK', dep_delay &gt; 15 ) %&gt;% 
+    arrange(desc(dep_delay))
+```
+
+---
+# *dplyr* verbs: *mutate*
+
+Add or modify columns based on the values of other columns
+
+
+```r
+flights %&gt;% 
+    mutate(
+        gain = arr_delay - dep_delay, 
+        speed = distance / air_time * 60
+    ) %&gt;% 
+    filter(gain &gt; 0) %&gt;% 
+    arrange(desc(speed)) %&gt;% 
+    head()
+```
+
+---
+# *dplyr* verbs: *summarize*
+
+Collapse a dataframe into one row
+
+
+```r
+flights %&gt;% 
+  summarise(delay = mean(dep_delay, na.rm = TRUE))
+
+flights %&gt;% 
+  filter(dep_delay &gt; 0) %&gt;% 
+  summarise(arr_delay = mean(arr_delay, na.rm = TRUE))
+```
+
+
+---
+# *dplyr* verbs: *summarise* helpers
+
+All the following functions take a vector as input and return a scalar
+
+ - `first()` first value in a vector
+ - `last()` last value in a vector
+ - `nth()` *n*-th value in a vector
+ - `n()` the total number of values in a vector
+ - `n_distinct()` the number of *distinct* values in a vector
+
+
+---
+# *dplyr* verbs: *group_by*
+
+Group observations according to the values of one or more columns. 
+It is usually combined with `summarize` to determine transformations for each group
+
+
+```r
+flights %&gt;% 
+    group_by(dest) %&gt;% 
+    summarise(planes = n_distinct(tailnum), flights = n()) %&gt;% 
+    arrange(desc(flights))
+```
+
+---
+# *dplyr* verbs: *group_by*
+
+
+```r
+flights %&gt;% 
+    group_by(tailnum) %&gt;% 
+    summarise(
+        count = n(), 
+        dist = round(mean(distance, na.rm = TRUE)), 
+        delay = round(mean(arr_delay, na.rm = TRUE), 2) 
+    ) %&gt;% 
+    filter(is.finite(delay)) %&gt;% 
+    arrange(desc(count))
+```
+
+
+---
+# *dplyr* functions
+
+ - `n()` count the number of rows
+
+--
+ 
+ - `distinct()` count the number of unique rows, eliminating duplications
+
+--
+ 
+ - `top_n()`
+
+--
+
+ - `sample_n()` selects *size* random rows from a dataframe
+
+--
+
+ - `sample_frac()` selects a fraction *size* of random rows 
+
+---
+# *dplyr* joins 
+
+ - `bind_cols()`
+ 
+ - `bind_rows()`
+ 
+ - `union()`
+ 
+ - `intersect()`
+ 
+ - `setdiff()`
+
+---
+# *dplyr* joins: *inner_join*
+
+ - Return all rows from `x` where there are matching values in `y`, and all columns from `x` and `y`
+ 
+--
+
+ - If there are multiple matches between `x` and `y`, all combinations of the matches are returned
+
+--
+ 
+ - This is a *mutating* join
+
+---
+# *dplyr* joins: *inner_join*
+
+ - single key, same name
+  
+   `inner_join(x, y, 'id')` 
+
+--
+ 
+ - single key, different names
+ 
+   `inner_join(x, y, c('idx' = 'idy'))` 
+
+--
+ 
+ - composite key, same names
+ 
+   `inner_join(x, y, c('id1', 'id2'))` 
+
+--
+ 
+ - composite key, different names
+ 
+   .font90[`inner_join(x, y, c('id1x' = 'id1y', 'id2x' = 'id2y'))`]
+ 
+   
+
+---
+# *dplyr* joins: *inner_join*
+
+
+```r
+flights %&gt;% 
+    group_by(dest) %&gt;% 
+    summarise(planes = n_distinct(tailnum), flights = n()) %&gt;% 
+    arrange(desc(flights)) %&gt;% 
+    inner_join(airports, by = c('dest' = 'faa'))
+```
+
+---
+# *dplyr* joins: *left_join*
+
+`left_join(x, y, 'id')` 
+
+ - Return all rows from `x`, and all columns from `x` and `y`
+ 
+--
+
+ - If there are multiple matches between `x` and `y`, *all* combination of the matches are returned
+ 
+--
+
+ - This is a *mutating* join
+
+
+
+---
+# *dplyr* joins: *full_join*
+
+ - Return all rows from `x` and `y`, and all columns from `x` and `y`
+ 
+--
+
+ - Unmatched rows are replaced with missing values
+ 
+--
+
+ - This is a *mutating* join
+
+
+---
+# *dplyr* joins
+
+`semi_join(x, y, 'id')`
+
+ - Return all rows from `x` where there are matching values in `y`, keeping just columns from `x`
+
+--
+ 
+ - A semi join also differs from an inner join because it will *never* duplicate rows of `x` 
+
+--
+ 
+ - This is a *filtering* join
+
+
+---
+# *dplyr* joins
+
+`anti_join(x, y, 'id')`
+
+ - Return all rows from `x` where there are not matching values in `y`, keeping just columns from `x`
+
+--
+ 
+ - This is a *filtering* join
+
+
+---
+# Resources
+
+--
+
+ - [Cheat Sheet]()
+ 
+--
+
+ - [Reference]()
+ 
+--
+
+ - [RStudio Tutorials]()
+
+--
+
+ - [Datacamp Skill Track]()
+
+
+---
+# Thank You!
+
+ - [<i class="fab  fa-twitter "></i> @datamaps](https://twitter.com/datamaps)
+
+ - [<i class="fab  fa-github "></i> lvalnegri](https://github.com/lvalnegri)
+ 
+ - [<i class="fab  fa-linkedin "></i> Luca Valnegri](https://www.linkedin.com/in/lucavalnegri)
+    </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+"highlightStyle": "github",
+"highlightLines": true,
+"countIncrementalSlides": false
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();
+// adds .remark-code-has-line-highlighted class to <pre> parent elements
+// of code chunks containing highlighted lines with class .remark-code-line-highlighted
+(function(d) {
+  const hlines = d.querySelectorAll('.remark-code-line-highlighted');
+  const preParents = [];
+  const findPreParent = function(line, p = 0) {
+    if (p > 1) return null; // traverse up no further than grandparent
+    const el = line.parentElement;
+    return el.tagName === "PRE" ? el : findPreParent(el, ++p);
+  };
+
+  for (let line of hlines) {
+    let pre = findPreParent(line);
+    if (pre && !preParents.includes(pre)) preParents.push(pre);
+  }
+  preParents.forEach(p => p.classList.add("remark-code-has-line-highlighted"));
+})(document);</script>
+
+<script>
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();
+</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+};
+slideshow._releaseMath(document);
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>
