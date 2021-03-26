@@ -66,7 +66,7 @@ You can select one or multiple column, using either the name of the column(s) or
 ```
 select(dataframe, column, ...)
 ```
-but it's preferable to use the *pipe* operator `%>%` from the [magrittr](https://magrittr.tidyverse.org/) package that can be directly applied to all commands that admit a dataframe a their first argument:
+but it's preferable to use the *pipe* operator `%>%` from the [magrittr](https://magrittr.tidyverse.org/) package that can be directly applied to all commands that accept a dataframe as their first argument:
 ```
 dataframe %>% select(column, ...)
 ```
@@ -79,11 +79,11 @@ diamonds %>% select(carat, price)
 
 To select a range of columns, by names or positions, use the `:` (colon) operator:
 ```{r}
-diamonds %>% select(carat)
+diamonds %>% select(1)
 diamonds %>% select(carat, price)
 ```
 
-To drop one or more column(s), aka select all the columns except one or more specific column(s), use the `-` (subtraction) operator (also known as *negative indexing*):
+Conversely, to drop one or more column(s), aka select all the columns except one or more specific column(s), use the `-` (subtraction) operator (also known as *negative indexing*):
 ```{r}
 diamonds %>% select(-carat)
 diamonds %>% select(-c(carat, price))
